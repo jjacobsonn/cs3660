@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Polling App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="poll-container">
+    <h1>📊 Classroom Poll</h1>
+    <p class="subtext">Which concept do you struggle with the most?</p>
+
+    <form id="pollForm">
+      <label><input type="radio" name="option" value="Dynamic Programming" /> Dynamic Programming</label><br />
+      <label><input type="radio" name="option" value="Pointers and Memory Management" /> Pointers and Memory Management</label><br />
+      <label><input type="radio" name="option" value="API Integration" /> API Integration</label><br />
+      <label><input type="radio" name="option" value="Concurrency / Multithreading" /> Concurrency / Multithreading</label><br />
+      <label><input type="radio" name="option" value="Time vs. Space Trade-offs" /> Time vs. Space Trade-offs</label><br />
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+        <button type="submit" id="submitBtn">Submit Vote</button>
+        <button type="button" id="resetBtn" style="display: none;">Vote Again</button>
+      </div>
+    </form>
+
+    <div id="results" class="results">
+      <!-- Live results will appear here -->
+    </div>
+
+    <div class="chart-container">
+      <h3 class="chart-title">Vote Distribution</h3>
+      <div class="chart-toggle">
+        <button id="pieChartBtn" class="active">Pie Chart</button>
+        <button id="barGraphBtn">Bar Graph</button>
+      </div>
+      <canvas id="pieChart" width="400" height="300"></canvas>
+      <canvas id="barGraph" width="400" height="300" style="display: none;"></canvas>
+      <div class="legend-container"></div>
+    </div>
+    
+    <div class="button-container">
+      <button id="clearAllBtn" class="danger-button">Reset All Votes</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
