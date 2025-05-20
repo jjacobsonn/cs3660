@@ -24,6 +24,7 @@ h1 {
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 18px;
+  text-align: center;
 }
 #feedbackList h3 {
   font-size: 1.1rem;
@@ -83,8 +84,30 @@ h1 {
 }
 
 /* --- Centered Button --- */
+textarea {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e0;
+  padding: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  font-family: inherit;
+}
 form button[type="submit"] {
   display: block;
   margin-left: auto;
   margin-right: auto;
+  margin-top: 18px;
+  padding: 10px 28px;
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+form button[type="submit"]:hover {
+  background: #225ea8;
 }

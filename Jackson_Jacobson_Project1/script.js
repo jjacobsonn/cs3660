@@ -64,6 +64,10 @@ form.addEventListener("submit", function (e) {
     document.getElementById('success-message').style.display = 'none';
     Array.from(form.elements).forEach(el => el.disabled = false);
   }, 2000);
+
+  // Show results after first submit
+  const resultsSection = document.getElementById('results');
+  resultsSection.style.display = 'block';
 });
 
 // --- Utility: Calculate Average ---
@@ -127,3 +131,6 @@ function displayFeedbacks() {
 // --- Initial Render ---
 drawChart();
 displayFeedbacks();
+// Hide results section until first submit
+const resultsSection = document.getElementById('results');
+resultsSection.style.display = 'none';
