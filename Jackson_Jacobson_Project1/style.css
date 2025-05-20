@@ -1,48 +1,20 @@
+/* --- Layout and Container --- */
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f7fa;
-  padding: 20px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f7fafc;
   margin: 0;
+  padding: 0;
 }
 .container {
-  max-width: 600px;
-  margin: auto;
+  max-width: 500px;
+  margin: 40px auto;
   background: #fff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 32px 24px;
 }
-label {
-  display: block;
-  margin-bottom: 15px;
-}
-input[type=range] {
-  width: 100%;
-}
-textarea {
-  width: 100%;
-  height: 80px;
-}
-button {
-  padding: 10px 20px;
-  background-color: #007acc;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-#results {
-  margin-top: 40px;
-}
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 0;
-}
-#results h2 {
-  text-align: center;
-}
+
+/* --- Headings and Section Titles --- */
 h1 {
   font-size: 2.2rem;
   font-weight: 700;
@@ -53,9 +25,6 @@ h1 {
   font-weight: 600;
   margin-bottom: 18px;
 }
-#feedbackList {
-  text-align: center;
-}
 #feedbackList h3 {
   font-size: 1.1rem;
   font-weight: 600;
@@ -63,6 +32,8 @@ h1 {
   margin-bottom: 12px;
   text-align: center;
 }
+
+/* --- Form and Criteria Sliders --- */
 .criteria label {
   display: flex;
   align-items: center;
@@ -82,19 +53,22 @@ h1 {
   flex: 1;
   margin: 0 10px;
 }
-.info {
-  font-size: 1rem;
-  margin-left: 4px;
-  cursor: pointer;
-  color: #718096;
-}
+
+/* --- Success Message --- */
 #success-message {
   text-align: center;
   font-size: 1.08rem;
 }
+
+/* --- Chart Styles --- */
 #chart {
   display: block;
   margin: 0 auto 20px auto;
+}
+
+/* --- Feedback Section --- */
+#feedbackList {
+  text-align: center;
 }
 .feedback-card {
   background: #f8fafc;
@@ -107,6 +81,8 @@ h1 {
   color: #2d3748;
   text-align: center;
 }
+
+/* --- Centered Button --- */
 form button[type="submit"] {
   display: block;
   margin-left: auto;

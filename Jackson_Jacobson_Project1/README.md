@@ -1,48 +1,45 @@
-# Classroom Polling App
+# Presentation Scoring Tool
 
-A simple web-based polling application that allows users to vote on which programming concepts they struggle with most. Results are displayed live as both a pie chart and a bar graph, with a legend/table for clarity.
+A simple web-based app for evaluating presentations using customizable criteria. Users can score Clarity, Delivery, and Confidence, leave anonymous feedback, and see live average scores and all feedback. No backend or external libraries required.
 
 ## Features
-- Dynamic voting options
-- Live results with percentage and vote counts
-- Toggle between Pie Chart and Bar Graph visualizations
-- Persistent vote storage using browser localStorage
-- Responsive, modern UI
+- Customizable scoring criteria (Clarity, Delivery, Confidence)
+- Sliders for 1–10 scoring
+- Optional anonymous feedback
+- Live-updating bar chart of average scores
+- All feedback displayed below the chart
+- Data stored in-memory (page refresh clears data)
 
-## How to Run
-1. Open a terminal and navigate to the project directory.
-2. Start a local server with:
+## Setup & Execution
+1. Download or clone this repository.
+2. Open a terminal and navigate to the project directory.
+3. Start a local server (Python 3 recommended):
    ```bash
    python3 -m http.server 8000
    ```
-3. Open your browser and go to [http://localhost:8000](http://localhost:8000)
-
-## Code Comments
-- The code is commented throughout, explaining the purpose of each function and important logic blocks.
-- Key sections include vote handling, chart drawing, and UI updates.
-
-## Setup & Execution
-- No installation is required beyond Python 3 (for the local server).
-- All code runs client-side in the browser.
-- No external JavaScript libraries are used; all charting is done with the HTML5 Canvas API.
+4. Open your browser and go to [http://localhost:8000](http://localhost:8000)
+5. Use the form to submit scores and feedback. The chart and feedback list update live.
 
 ## Dependencies
-- No external dependencies or libraries are required.
+- No external dependencies or libraries are used.
 - The project uses only standard HTML, CSS, and JavaScript.
 
 ## Example Inputs & Outputs
-- **Input:** User selects "API Integration" and clicks "Submit Vote".
+- **Input:**
+  - Clarity: 8
+  - Delivery: 7
+  - Confidence: 9
+  - Feedback: "Great job!"
 - **Output:**
-  - The vote count for "API Integration" increases by 1.
-  - The pie chart and bar graph update to reflect the new vote distribution.
-  - The legend/table below the charts updates with the new counts and percentages.
+  - The bar chart updates to show the new averages for each criterion.
+  - The feedback "Great job!" appears in the feedback section below the chart.
 
 ## File Overview
-- `index.html` — Main HTML structure for the poll and charts.
-- `style.css` — Styling for the poll, charts, and layout.
-- `script.js` — Handles voting logic, chart drawing, and UI updates.
+- `index.html` — Main HTML structure for the form, chart, and feedback.
+- `style.css` — Styling for the form, chart, and layout.
+- `script.js` — Handles form logic, chart drawing, and feedback display.
 - `README.md` — Project documentation (this file).
 
 ---
 
-For any questions or issues, please contact Jackson Jacobson.
+For any questions or issues, please contact the project maintainer.
