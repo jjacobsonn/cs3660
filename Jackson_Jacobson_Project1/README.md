@@ -45,4 +45,4 @@ A simple web-based polling application that allows users to vote on which progra
 
 ---
 
-For any questions or issues, please contact the project maintainer.
+For any questions or issues, please contact Jackson Jacobson.

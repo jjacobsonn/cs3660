@@ -2,44 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Polling App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presentation Scoring Tool</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="poll-container">
-    <h1>📊 Classroom Poll</h1>
-    <p class="subtext">Which concept do you struggle with the most?</p>
-
-    <form id="pollForm">
-      <label><input type="radio" name="option" value="Dynamic Programming" /> Dynamic Programming</label><br />
-      <label><input type="radio" name="option" value="Pointers and Memory Management" /> Pointers and Memory Management</label><br />
-      <label><input type="radio" name="option" value="API Integration" /> API Integration</label><br />
-      <label><input type="radio" name="option" value="Concurrency / Multithreading" /> Concurrency / Multithreading</label><br />
-      <label><input type="radio" name="option" value="Time vs. Space Trade-offs" /> Time vs. Space Trade-offs</label><br />
-      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-        <button type="submit" id="submitBtn">Submit Vote</button>
-        <button type="button" id="resetBtn" style="display: none;">Vote Again</button>
+  <div class="container">
+    <h1>Presentation Scoring Form</h1>
+    <form id="scoreForm">
+      <div class="criteria">
+        <label>
+          Clarity:
+          <span class="slider-value" id="clarity-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Clarity" class="slider"/>
+        </label>
+        <label>
+          Delivery:
+          <span class="slider-value" id="delivery-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Delivery" class="slider"/>
+        </label>
+        <label>
+          Confidence:
+          <span class="slider-value" id="confidence-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Confidence" class="slider"/>
+        </label>
       </div>
+      <label>Anonymous Feedback:
+        <textarea name="feedback" placeholder="Write feedback here..."></textarea>
+      </label>
+      <button type="submit">Submit Evaluation</button>
+      <div id="success-message" style="display:none; color: #38a169; margin-top: 10px; font-weight: 600; text-align: center;">✅ Thank you! Your evaluation has been recorded.</div>
     </form>
 
-    <div id="results" class="results">
-      <!-- Live results will appear here -->
-    </div>
-
-    <div class="chart-container">
-      <h3 class="chart-title">Vote Distribution</h3>
-      <div class="chart-toggle">
-        <button id="pieChartBtn" class="active">Pie Chart</button>
-        <button id="barGraphBtn">Bar Graph</button>
-      </div>
-      <canvas id="pieChart" width="400" height="300"></canvas>
-      <canvas id="barGraph" width="400" height="300" style="display: none;"></canvas>
-      <div class="legend-container"></div>
-    </div>
-    
-    <div class="button-container">
-      <button id="clearAllBtn" class="danger-button">Reset All Votes</button>
+    <div id="results">
+      <h2 class="section-title">Average Scores</h2>
+      <canvas id="chart" width="400" height="200"></canvas>
+      <div id="feedbackList"></div>
     </div>
   </div>
 
