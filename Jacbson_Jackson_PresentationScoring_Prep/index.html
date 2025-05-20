@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presentation Scoring Tool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Main Title -->
+    <h1>Presentation Scoring Form</h1>
+    <!-- Scoring Form -->
+    <form id="scoreForm">
+      <div class="criteria">
+        <!-- Clarity Slider -->
+        <label>
+          Clarity:
+          <span class="slider-value" id="clarity-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Clarity" class="slider"/>
+        </label>
+        <!-- Delivery Slider -->
+        <label>
+          Delivery:
+          <span class="slider-value" id="delivery-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Delivery" class="slider"/>
+        </label>
+        <!-- Confidence Slider -->
+        <label>
+          Confidence:
+          <span class="slider-value" id="confidence-value">5 ⭐</span>
+          <input type="range" min="1" max="10" value="5" name="Confidence" class="slider"/>
+        </label>
+      </div>
+      <!-- Anonymous Feedback Textarea -->
+      <label>Anonymous Feedback:
+        <textarea name="feedback" placeholder="Write feedback here..."></textarea>
+      </label>
+      <!-- Submit Button -->
+      <button type="submit">Submit Evaluation</button>
+      <!-- Success Message -->
+      <div id="success-message" style="display:none; color: #38a169; margin-top: 10px; font-weight: 600; text-align: center;">✅ Thank you! Your evaluation has been recorded.</div>
+    </form>
+
+    <!-- Results Section (hidden by default, shown after first submit) -->
+    <div id="results" style="display: none;">
+      <!-- Average Scores Section -->
+      <h2 class="section-title">Average Scores</h2>
+      <!-- Bar Chart Canvas -->
+      <canvas id="chart" width="400" height="200"></canvas>
+      <!-- Feedback List -->
+      <div id="feedbackList"></div>
+    </div>
+  </div>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
