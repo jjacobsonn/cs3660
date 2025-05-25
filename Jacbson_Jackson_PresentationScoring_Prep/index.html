@@ -1,75 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  <title>Presentation Scoring Tool</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="data-manager.js"></script>
+    <!-- Character encoding and viewport settings for proper mobile rendering -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Presentation Scoring Tool</title>
+    
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- MQTT client library for real-time communication -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Data management and MQTT integration -->
+    <script src="data-manager.js"></script>
 </head>
 <body>
-  <div class="container">
-    <!-- Main Title -->
-    <h1>Presentation Scoring Form</h1>    <!-- Scoring Form -->
-    <form id="scoreForm">
-      <!-- Student Info -->      <div class="student-info">
-        <div class="input-group">
-          <label for="studentId">Student ID:</label>
-          <input type="number" id="studentId" name="studentId" required min="1" placeholder="Enter your student ID">
-        </div>
-        <div class="input-group">
-          <label for="studentName">Full Name:</label>
-          <input type="text" id="studentName" name="studentName" required placeholder="Enter your full name">
-        </div>
-        <div class="input-group checkbox-group">
-          <label for="isAnonymous">
-            <input type="checkbox" id="isAnonymous" name="isAnonymous">
-            Submit feedback anonymously
-          </label>
-        </div>
-      </div>
-      <div class="criteria">
-        <!-- Clarity Slider -->
-        <label>
-          Clarity:
-          <span class="slider-value" id="clarity-value">5 ⭐</span>
-          <input type="range" min="1" max="10" value="5" name="Clarity" class="slider"/>
-        </label>
-        <!-- Delivery Slider -->
-        <label>
-          Delivery:
-          <span class="slider-value" id="delivery-value">5 ⭐</span>
-          <input type="range" min="1" max="10" value="5" name="Delivery" class="slider"/>
-        </label>
-        <!-- Confidence Slider -->
-        <label>
-          Confidence:
-          <span class="slider-value" id="confidence-value">5 ⭐</span>
-          <input type="range" min="1" max="10" value="5" name="Confidence" class="slider"/>
-        </label>
-      </div>
-      <!-- Anonymous Feedback Textarea -->
-      <label>Anonymous Feedback:
-        <textarea name="feedback" placeholder="Write feedback here..."></textarea>
-      </label>
-      <!-- Submit Button -->
-      <button type="submit">Submit Evaluation</button>
-      <!-- Success Message -->
-      <div id="success-message" style="display:none; color: #38a169; margin-top: 10px; font-weight: 600; text-align: center;">✅ Thank you! Your evaluation has been recorded.</div>
-    </form>
+    <!-- Main Container - Centers content and provides consistent padding -->
+    <div class="container">
+        <!-- Application Header -->
+        <h1>Presentation Scoring Form</h1>
 
-    <!-- Results Section (hidden by default, shown after first submit) -->
-    <div id="results" style="display: none;">
-      <!-- Average Scores Section -->
-      <h2 class="section-title">Average Scores</h2>
-      <!-- Bar Chart Canvas -->
-      <canvas id="chart" width="400" height="200"></canvas>
-      <!-- Feedback List -->
-      <div id="feedbackList"></div>
+        <!-- Main Scoring Form -->
+        <form id="scoreForm">
+            <!-- Student Information Section -->
+            <!-- Groups student ID, name, and anonymous toggle for logical organization -->
+            <div class="student-row">
+                <div class="student-info">
+                    <div class="input-group">
+                        <label for="studentId">Student ID:</label>
+                        <input type="number" id="studentId" name="studentId" required min="1" placeholder="Enter your student ID">
+                    </div>
+                    <div class="input-group">
+                        <label for="studentName">Full Name:</label>
+                        <input type="text" id="studentName" name="studentName" required placeholder="Enter your full name">
+                    </div>
+                </div>
+                <div class="anonymous-toggle">
+                    <label class="switch-label">
+                        <input type="checkbox" id="isAnonymous" name="isAnonymous"/>
+                        <span class="slider-switch"></span>
+                        <span class="anon-text">Submit Anonymously</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Scoring Criteria Section -->
+            <!-- Uses range inputs with real-time value display -->
+            <div class="criteria">
+                <!-- Clarity Slider -->
+                <label>
+                    Clarity:
+                    <span class="slider-value" id="clarity-value">5 ⭐</span>
+                    <input type="range" min="1" max="10" value="5" name="Clarity" class="slider"/>
+                </label>
+                <!-- Delivery Slider -->
+                <label>
+                    Delivery:
+                    <span class="slider-value" id="delivery-value">5 ⭐</span>
+                    <input type="range" min="1" max="10" value="5" name="Delivery" class="slider"/>
+                </label>
+                <!-- Confidence Slider -->
+                <label>
+                    Confidence:
+                    <span class="slider-value" id="confidence-value">5 ⭐</span>
+                    <input type="range" min="1" max="10" value="5" name="Confidence" class="slider"/>
+                </label>
+            </div>
+
+            <!-- Feedback Input Section -->
+            <label>Feedback:
+                <textarea name="feedback" placeholder="Write feedback here..."></textarea>
+            </label>
+
+            <!-- Form Controls -->
+            <button type="submit">Submit Evaluation</button
+            
+            <!-- Success Message - Hidden by default -->
+            <div id="success-message" style="display:none; color: #38a169; margin-top: 10px; font-weight: 600; text-align: center;">
+                ✅ Thank you! Your evaluation has been recorded.
+            </div>
+        </form>
+
+        <!-- Results Section - Hidden until first submission -->
+        <div id="results" style="display: none;">
+            <!-- Average Scores Visualization -->
+            <h2 class="section-title">Average Scores</h2>
+            <canvas id="chart" width="400" height="200"></canvas>
+            
+            <!-- Feedback Display Section -->
+            <div id="feedbackList"></div>
+        </div>
     </div>
-  </div>
 
-  <!-- Main Script -->
-  <script src="script.js"></script>
+    <!-- Main application logic -->
+    <script src="script.js"></script>
 </body>
 </html>
