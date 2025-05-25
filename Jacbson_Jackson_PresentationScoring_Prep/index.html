@@ -2,16 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Presentation Scoring Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  <title>Presentation Scoring Tool</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="data-manager.js"></script>
 </head>
 <body>
   <div class="container">
     <!-- Main Title -->
-    <h1>Presentation Scoring Form</h1>
-    <!-- Scoring Form -->
+    <h1>Presentation Scoring Form</h1>    <!-- Scoring Form -->
     <form id="scoreForm">
+      <!-- Student Info -->      <div class="student-info">
+        <div class="input-group">
+          <label for="studentId">Student ID:</label>
+          <input type="number" id="studentId" name="studentId" required min="1" placeholder="Enter your student ID">
+        </div>
+        <div class="input-group">
+          <label for="studentName">Full Name:</label>
+          <input type="text" id="studentName" name="studentName" required placeholder="Enter your full name">
+        </div>
+        <div class="input-group checkbox-group">
+          <label for="isAnonymous">
+            <input type="checkbox" id="isAnonymous" name="isAnonymous">
+            Submit feedback anonymously
+          </label>
+        </div>
+      </div>
       <div class="criteria">
         <!-- Clarity Slider -->
         <label>

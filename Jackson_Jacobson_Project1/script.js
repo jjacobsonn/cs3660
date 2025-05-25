@@ -22,6 +22,53 @@ let scores = {
 // Stores all submitted feedback strings
 let feedbacks = [];
 
+// --- Student List and Submission Tracking ---
+const students = [
+  { id: 1, name: "Tyler Babbel" },
+  { id: 2, name: "Caleb Beazel" },
+  { id: 3, name: "Limhi Canton" },
+  { id: 4, name: "Sean Davis" },
+  { id: 5, name: "Tyler Driggs" },
+  { id: 6, name: "Joshua Dutton" },
+  { id: 7, name: "Charles Garrison" },
+  { id: 8, name: "Asher Grey" },
+  { id: 9, name: "Aria Hassanzadeh" },
+  { id: 10, name: "Jackson Jacobson" },
+  { id: 11, name: "Tiare Jorquera Munoz" },
+  { id: 12, name: "Marlon Sebastian Osorio" },
+  { id: 13, name: "Jordan Paxman" },
+  { id: 14, name: "Tyler Perkins" },
+  { id: 15, name: "Spencer Rohwer" },
+  { id: 16, name: "Connor Scott" },
+  { id: 17, name: "Matt Scott" },
+  { id: 18, name: "Aaron Scroggins" },
+  { id: 19, name: "Carissa Seidel" },
+  { id: 20, name: "Jarek Smith" },
+  { id: 21, name: "Jess Smith" },
+  { id: 22, name: "Zachary Stout" },
+  { id: 23, name: "MacKayla Whitehead" }
+];
+// Track submissions by student id
+let submissions = {};
+students.forEach(s => { submissions[s.id] = null; });
+
+// --- MQTT Setup ---
+const MQTT_BROKER = "wss://test.mosquitto.org:8081/mqtt"; // Example public broker
+const MQTT_CLIENT_ID = "prescore-" + Math.random().toString(16).substr(2, 8);
+const MQTT_TOPIC_SUBMIT = "presentation/score/submit";
+const MQTT_TOPIC_SUMMARY = "presentation/score/summary";
+let mqttClient = null;
+
+function connectMQTT() {
+  mqttClient = new Paho.MQTT.Client(MQTT_BROKER, MQTT_CLIENT_ID);
+  mqttClient.onConnectionLost = function() { console.warn("MQTT connection lost"); };
+  mqttClient.connect({
+    onSuccess: () => { console.log("Connected to MQTT broker"); },
+    useSSL: true
+  });
+}
+connectMQTT();
+
 // --- Slider Value Display ---
 // Show live value with a star next to each slider
 claritySlider.addEventListener('input', () => clarityValue.textContent = `${claritySlider.value} ⭐`);
@@ -40,6 +87,17 @@ form.addEventListener("reset", function() {
 form.addEventListener("submit", function (e) {
   e.preventDefault();
   const formData = new FormData(form);
+  // --- New: Get student id ---
+  const studentName = formData.get("studentName");
+  const student = students.find(s => s.name === studentName);
+  if (!student) {
+    alert("Invalid student name. Please select your name from the list.");
+    return;
+  }
+  if (submissions[student.id]) {
+    alert("You have already submitted for this presentation.");
+    return;
+  }
   const clarity = parseInt(formData.get("Clarity"));
   const delivery = parseInt(formData.get("Delivery"));
   const confidence = parseInt(formData.get("Confidence"));
@@ -49,9 +107,45 @@ form.addEventListener("submit", function (e) {
   scores.Clarity.push(clarity);
   scores.Delivery.push(delivery);
   scores.Confidence.push(confidence);
-
-  // Store feedback if provided
   if (feedback) feedbacks.push(feedback);
+  submissions[student.id] = {
+    id: student.id,
+    name: student.name,
+    Clarity: clarity,
+    Delivery: delivery,
+    Confidence: confidence,
+    feedback: feedback
+  };
+
+  // --- MQTT: Send submission JSON ---
+  const submissionObj = {
+    id: student.id,
+    name: student.name,
+    Clarity: clarity,
+    Delivery: delivery,
+    Confidence: confidence,
+    feedback: feedback,
+    timestamp: new Date().toISOString()
+  };
+  if (mqttClient && mqttClient.isConnected()) {
+    mqttClient.send(MQTT_TOPIC_SUBMIT, JSON.stringify(submissionObj));
+  }
+
+  // --- MQTT: Send summary JSON ---
+  const summaryObj = {
+    totalStudents: students.length,
+    submitted: Object.values(submissions).filter(Boolean).map(s => ({ id: s.id, name: s.name })),
+    notSubmitted: students.filter(s => !submissions[s.id]),
+    average: {
+      Clarity: average(scores.Clarity),
+      Delivery: average(scores.Delivery),
+      Confidence: average(scores.Confidence)
+    },
+    timestamp: new Date().toISOString()
+  };
+  if (mqttClient && mqttClient.isConnected()) {
+    mqttClient.send(MQTT_TOPIC_SUMMARY, JSON.stringify(summaryObj));
+  }
 
   // Reset form and update UI
   form.reset();

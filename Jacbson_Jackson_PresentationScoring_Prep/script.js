@@ -1,6 +1,9 @@
 // --- Presentation Scoring Tool ---
 // Handles form submission, slider UI, chart drawing, and feedback display.
 
+// --- Data Management ---
+const scoringManager = new ScoringManager();
+
 // --- DOM Elements ---
 const form = document.getElementById("scoreForm");
 const chartCanvas = document.getElementById("chart");
@@ -11,70 +14,106 @@ const confidenceSlider = document.querySelector('input[name="Confidence"]');
 const clarityValue = document.getElementById('clarity-value');
 const deliveryValue = document.getElementById('delivery-value');
 const confidenceValue = document.getElementById('confidence-value');
-
-// --- Data Storage ---
-// Each criterion stores an array of submitted scores
-let scores = {
-  Clarity: [],
-  Delivery: [],
-  Confidence: []
-};
-// Stores all submitted feedback strings
-let feedbacks = [];
+const studentIdInput = document.getElementById('studentId');
+const studentNameInput = document.getElementById('studentName');
 
 // --- Slider Value Display ---
 // Show live value with a star next to each slider
-claritySlider.addEventListener('input', () => clarityValue.textContent = `${claritySlider.value} ⭐`);
-deliverySlider.addEventListener('input', () => deliveryValue.textContent = `${deliverySlider.value} ⭐`);
-confidenceSlider.addEventListener('input', () => confidenceValue.textContent = `${confidenceSlider.value} ⭐`);
+function updateSliderValue(slider, valueElement) {
+    if (!slider || !valueElement) return;
+    const currentValue = slider.value || '5';
+    valueElement.textContent = `${currentValue} ⭐`;
+}
+
+// Define slider pairs
+const sliderPairs = [
+    { slider: claritySlider, valueElement: clarityValue },
+    { slider: deliverySlider, valueElement: deliveryValue },
+    { slider: confidenceSlider, valueElement: confidenceValue }
+];
+
+// Initialize slider values and attach event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Validate DOM elements
+    sliderPairs.forEach(({ slider, valueElement }) => {
+        if (!slider || !valueElement) return;
+        
+        // Add both input and change event listeners
+        ['input', 'change'].forEach(eventType => {
+            slider.addEventListener(eventType, () => {
+                updateSliderValue(slider, valueElement);
+            });
+        });
+
+        // Set initial value
+        updateSliderValue(slider, valueElement);
+    });
+});
 
 // Reset slider values on form reset
 form.addEventListener("reset", function() {
-  clarityValue.textContent = `${claritySlider.value} ⭐`;
-  deliveryValue.textContent = `${deliverySlider.value} ⭐`;
-  confidenceValue.textContent = `${confidenceSlider.value} ⭐`;
+  // Use requestAnimationFrame to ensure this runs after the form reset
+  requestAnimationFrame(() => {
+    // Reset all sliders to default value
+    [
+      { slider: claritySlider, value: clarityValue },
+      { slider: deliverySlider, value: deliveryValue },
+      { slider: confidenceSlider, value: confidenceValue }
+    ].forEach(({ slider, value }) => {
+      slider.value = 5;
+      updateSliderValue(slider, value);
+    });
+  });
 });
 
 // --- Form Submission ---
 // Handles collecting scores, feedback, updating chart, and showing success message
 form.addEventListener("submit", function (e) {
   e.preventDefault();
-  const formData = new FormData(form);
-  const clarity = parseInt(formData.get("Clarity"));
-  const delivery = parseInt(formData.get("Delivery"));
-  const confidence = parseInt(formData.get("Confidence"));
-  const feedback = formData.get("feedback").trim();
+    const formData = new FormData(form);
+  const studentId = formData.get("studentId");
+  const studentName = formData.get("studentName");
+  
+  if (!studentId || !studentName) {
+    alert('Please enter both your Student ID and Name');
+    return;
+  }
 
-  // Store scores
-  scores.Clarity.push(clarity);
-  scores.Delivery.push(delivery);
-  scores.Confidence.push(confidence);
+  if (scoringManager.hasSubmitted(studentId)) {
+    alert('A submission has already been recorded for this Student ID');
+    return;
+  }
+  const scoreData = {
+    studentId: parseInt(studentId),
+    studentName: studentName,
+    clarity: parseInt(formData.get("Clarity")),
+    delivery: parseInt(formData.get("Delivery")),
+    confidence: parseInt(formData.get("Confidence")),
+    feedback: formData.get("feedback").trim(),
+    isAnonymous: formData.get("isAnonymous") === "on"
+  };
 
-  // Store feedback if provided
-  if (feedback) feedbacks.push(feedback);
-
-  // Reset form and update UI
-  form.reset();
-  drawChart();
-  displayFeedbacks();
-  // Show success message and disable form briefly
-  document.getElementById('success-message').style.display = 'block';
-  Array.from(form.elements).forEach(el => el.disabled = true);
-  setTimeout(() => {
-    document.getElementById('success-message').style.display = 'none';
-    Array.from(form.elements).forEach(el => el.disabled = false);
-  }, 2000);
+  const result = scoringManager.submitScore(studentId, scoreData);
+  if (result.success) {
+    // Reset form and update UI
+    form.reset();
+    drawChart();
+    displayFeedbacks();
+    // Show success message and disable form briefly
+    document.getElementById('success-message').style.display = 'block';
+    Array.from(form.elements).forEach(el => el.disabled = true);
+    setTimeout(() => {
+      document.getElementById('success-message').style.display = 'none';
+      Array.from(form.elements).forEach(el => el.disabled = false);
+    }, 2000);
+  } else {
+    alert(result.message);
+  }
 
   // Show results after first submit
   const resultsSection = document.getElementById('results');
   resultsSection.style.display = 'block';
 });
-
-// --- Utility: Calculate Average ---
-function average(arr) {
-  if (arr.length === 0) return 0;
-  return arr.reduce((a, b) => a + b) / arr.length;
-}
 
 // --- Draw Bar Chart ---
 // Draws a color-coded, centered bar chart of average scores for each criterion
@@ -82,10 +121,11 @@ function drawChart() {
   const ctx = chartCanvas.getContext("2d");
   ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
 
+  const summary = scoringManager.getSummary();
   const data = [
-    average(scores.Clarity),
-    average(scores.Delivery),
-    average(scores.Confidence)
+    summary.averages.clarity,
+    summary.averages.delivery,
+    summary.averages.confidence
   ];
   const labels = ["Clarity", "Delivery", "Confidence"];
   // Distinct color for each bar
@@ -120,11 +160,14 @@ function drawChart() {
 // Renders all feedback as centered cards below the chart
 function displayFeedbacks() {
   feedbackList.innerHTML = "<h3>Anonymous Feedback</h3>";
-  feedbacks.forEach((fb, i) => {
-    const div = document.createElement("div");
-    div.className = "feedback-card";
-    div.textContent = fb;
-    feedbackList.appendChild(div);
+  const summary = scoringManager.getSummary();
+  summary.submissions.forEach(submission => {
+    if (submission.feedback) {
+      const div = document.createElement("div");
+      div.className = "feedback-card";
+      div.textContent = submission.feedback;
+      feedbackList.appendChild(div);
+    }
   });
 }
 
