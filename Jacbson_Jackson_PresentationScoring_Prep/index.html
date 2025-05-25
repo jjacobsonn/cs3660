@@ -12,6 +12,21 @@
     <h1>Presentation Scoring Form</h1>
     <!-- Scoring Form -->
     <form id="scoreForm">
+      <!-- Student Info and Anonymous Toggle (Grouped) -->
+      <div class="student-row">
+        <div class="student-info">
+          <label for="studentInput">Student ID:</label>
+          <input type="number" id="studentInput" required min="1" max="23"/>
+        </div>
+        <div class="anonymous-toggle">
+          <label class="switch-label">
+            <input type="checkbox" id="anonymousToggle" name="anonymous"/>
+            <span class="slider-switch"></span>
+            <span class="anon-text">Enable Anonymous Reporting</span>
+          </label>
+        </div>
+      </div>
+
       <div class="criteria">
         <!-- Clarity Slider -->
         <label>
@@ -32,8 +47,8 @@
           <input type="range" min="1" max="10" value="5" name="Confidence" class="slider"/>
         </label>
       </div>
-      <!-- Anonymous Feedback Textarea -->
-      <label>Anonymous Feedback:
+      <!-- Feedback Textarea -->
+      <label>Feedback:
         <textarea name="feedback" placeholder="Write feedback here..."></textarea>
       </label>
       <!-- Submit Button -->
