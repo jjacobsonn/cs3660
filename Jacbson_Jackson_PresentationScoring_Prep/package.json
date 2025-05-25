@@ -1,0 +1,16 @@
+{
+  "name": "jacbson_jackson_presentationscoring_prep",
+  "version": "1.0.0",
+  "description": "A real-time web-based application for evaluating presentations with customizable criteria. Users can score presentations on Clarity, Delivery, and Confidence metrics, provide anonymous feedback, and see live-updating average scores. The application uses MQTT for real-time data synchronization with other applications.",
+  "main": "data-manager.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "mqtt": "^5.13.0"
+  }
+}

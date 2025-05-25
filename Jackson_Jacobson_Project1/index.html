@@ -12,6 +12,36 @@
     <h1>Presentation Scoring Form</h1>
     <!-- Scoring Form -->
     <form id="scoreForm">
+      <!-- Student Name Dropdown -->
+      <label for="studentName">Your Name:
+        <select name="studentName" id="studentName" required>
+          <option value="">-- Select your name --</option>
+          <option>Tyler Babbel</option>
+          <option>Caleb Beazel</option>
+          <option>Limhi Canton</option>
+          <option>Sean Davis</option>
+          <option>Tyler Driggs</option>
+          <option>Joshua Dutton</option>
+          <option>Charles Garrison</option>
+          <option>Asher Grey</option>
+          <option>Aria Hassanzadeh</option>
+          <option>Jackson Jacobson</option>
+          <option>Tiare Jorquera Munoz</option>
+          <option>Marlon Sebastian Osorio</option>
+          <option>Jordan Paxman</option>
+          <option>Tyler Perkins</option>
+          <option>Spencer Rohwer</option>
+          <option>Connor Scott</option>
+          <option>Matt Scott</option>
+          <option>Aaron Scroggins</option>
+          <option>Carissa Seidel</option>
+          <option>Jarek Smith</option>
+          <option>Jess Smith</option>
+          <option>Zachary Stout</option>
+          <option>MacKayla Whitehead</option>
+        </select>
+      </label>
+      <!-- Clarity Slider -->
       <div class="criteria">
         <!-- Clarity Slider -->
         <label>
@@ -53,6 +83,8 @@
     </div>
   </div>
 
+  <!-- Load Eclipse Paho MQTT JavaScript client from CDN -->
+  <script src="https://unpkg.com/paho-mqtt@1.1.0/paho-mqtt-min.js"></script>
   <!-- Main Script -->
   <script src="script.js"></script>
 </body>

@@ -1,36 +1,16 @@
-// --- Presentation Scoring Tool ---
-// Handles form submission, slider UI, chart drawing, and feedback display.
+/**
+ * Presentation Scoring Tool
+ * 
+ * This script handles the client-side functionality of the presentation scoring application.
+ * It manages form interactions, real-time slider updates, data visualization through charts,
+ * and feedback display. The application uses MQTT for real-time data synchronization.
+ */
 
-// --- Student Data ---
-const studentData = {
-  "students": [
-    {"id": 1,"name": "Tyler Babbel"},
-    {"id": 2,"name": "Caleb Beazel"},
-    {"id": 3,"name": "Limhi Canton"},
-    {"id": 4,"name": "Sean Davis"},
-    {"id": 5,"name": "Tyler Driggs"},
-    {"id": 6,"name": "Joshua Dutton"},
-    {"id": 7,"name": "Charles Garrison"},
-    {"id": 8,"name": "Asher Grey"},
-    {"id": 9,"name": "Aria Hassanzadeh"},
-    {"id": 10,"name": "Jackson Jacobson"},
-    {"id": 11,"name": "Tiare Jorquera Munoz"},
-    {"id": 12,"name": "Marlon Sebastian Osorio"},
-    {"id": 13,"name": "Jordan Paxman"},
-    {"id": 14,"name": "Tyler Perkins"},
-    {"id": 15,"name": "Spencer Rohwer"},
-    {"id": 16,"name": "Connor Scott"},
-    {"id": 17,"name": "Matt Scott"},
-    {"id": 18,"name": "Aaron Scroggins"},
-    {"id": 19,"name": "Carissa Seidel"},
-    {"id": 20,"name": "Jarek Smith"},
-    {"id": 21,"name": "Jess Smith"},
-    {"id": 22,"name": "Zachary Stout"},
-    {"id": 23,"name": "MacKayla Whitehead"}
-  ]
-};
+// Initialize the scoring manager for handling data persistence and MQTT communication
+const scoringManager = new ScoringManager();
 
-// --- DOM Elements ---
+// --- DOM Element References ---
+// Cache DOM elements to avoid repeated queries and improve performance
 const form = document.getElementById("scoreForm");
 const chartCanvas = document.getElementById("chart");
 const feedbackList = document.getElementById("feedbackList");
@@ -40,186 +20,209 @@ const confidenceSlider = document.querySelector('input[name="Confidence"]');
 const clarityValue = document.getElementById('clarity-value');
 const deliveryValue = document.getElementById('delivery-value');
 const confidenceValue = document.getElementById('confidence-value');
-const studentInput = document.getElementById('studentInput');
-const studentName = document.getElementById('studentName');
-const studentList = document.getElementById('studentList');
-const anonymousToggle = document.getElementById('anonymousToggle');
+const studentIdInput = document.getElementById('studentId');
+const studentNameInput = document.getElementById('studentName');
 
-// --- Data Storage ---
-// Each criterion stores an array of submitted scores
-let scores = {
-  Clarity: [],
-  Delivery: [],
-  Confidence: []
-};
-// Stores all submitted feedback with metadata
-let feedbacks = [];
-// Stores all submission JSON objects
-let submissions = [];
-
-// --- Slider Value Display ---
-// Show live value with a star next to each slider
-claritySlider.addEventListener('input', () => clarityValue.textContent = `${claritySlider.value} ⭐`);
-deliverySlider.addEventListener('input', () => deliveryValue.textContent = `${deliverySlider.value} ⭐`);
-confidenceSlider.addEventListener('input', () => confidenceValue.textContent = `${confidenceSlider.value} ⭐`);
-
-// Reset slider values on form reset
-form.addEventListener("reset", function() {
-  clarityValue.textContent = `${claritySlider.value} ⭐`;
-  deliveryValue.textContent = `${deliverySlider.value} ⭐`;
-  confidenceValue.textContent = `${confidenceSlider.value} ⭐`;
-});
-
-// --- Aggregate Function ---
-function aggregateSubmissions() {
-  if (submissions.length === 0) return null;
-  let claritySum = 0, deliverySum = 0, confidenceSum = 0;
-  let userIds = [];
-  let comments = [];
-  submissions.forEach(sub => {
-    claritySum += sub.clarity;
-    deliverySum += sub.delivery;
-    confidenceSum += sub.confidence;
-    userIds.push(sub.userId);
-    if (sub.feedback) comments.push(sub.feedback);
-  });
-  return {
-    average: {
-      clarity: +(claritySum / submissions.length).toFixed(2),
-      delivery: +(deliverySum / submissions.length).toFixed(2),
-      confidence: +(confidenceSum / submissions.length).toFixed(2)
-    },
-    userIds,
-    comments
-  };
+// Function to update a slider's display value
+function updateSliderValue(event) {
+    const slider = event.target;
+    const valueDisplay = slider.parentElement.querySelector('.slider-value');
+    if (valueDisplay) {
+        valueDisplay.textContent = `${slider.value} ⭐`;
+    }
 }
 
-// --- Form Submission ---
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
-  const formData = new FormData(form);
-  const clarity = parseInt(formData.get("Clarity"));
-  const delivery = parseInt(formData.get("Delivery"));
-  const confidence = parseInt(formData.get("Confidence"));
-  const feedback = formData.get("feedback").trim();
-  const isAnonymous = formData.get("anonymous") === "on";
-  
-  // Get student info by ID
-  const inputId = parseInt(document.getElementById('studentInput').value, 10);
-  const student = studentData.students.find(s => s.id === inputId);
-
-  if (!student) {
-    alert("Please enter a valid student ID (1-23)");
-    return;
-  }
-
-  // Store scores
-  scores.Clarity.push(clarity);
-  scores.Delivery.push(delivery);
-  scores.Confidence.push(confidence);
-
-  // Store feedback with metadata
-  if (feedback) {
-    feedbacks.push({
-      text: feedback,
-      studentId: student.id,
-      studentName: isAnonymous ? "Anonymous" : student.name,
-      timestamp: new Date().toISOString()
+// Initialize slider functionality when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Set up all range inputs
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+        // Set initial value
+        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        if (valueDisplay) {
+            valueDisplay.textContent = `${slider.value} ⭐`;
+        }
+        
+        // Add real-time update listeners
+        slider.addEventListener('input', updateSliderValue);
+        slider.addEventListener('change', updateSliderValue);
     });
-  }
-
-  // Create submission JSON object
-  const submission = {
-    userId: student.id,
-    anonymous: isAnonymous,
-    clarity,
-    delivery,
-    confidence,
-    feedback
-  };
-  submissions.push(submission);
-
-  // Log individual submission JSON
-  console.log('Submission JSON:', JSON.stringify(submission, null, 2));
-
-  // Aggregate and log
-  const aggregate = aggregateSubmissions();
-  console.log('Aggregate JSON:', JSON.stringify(aggregate, null, 2));
-
-  // Reset form and update UI
-  form.reset();
-  drawChart();
-  displayFeedbacks();
-  
-  // Show success message and disable form briefly
-  document.getElementById('success-message').style.display = 'block';
-  Array.from(form.elements).forEach(el => el.disabled = true);
-  setTimeout(() => {
-    document.getElementById('success-message').style.display = 'none';
-    Array.from(form.elements).forEach(el => el.disabled = false);
-  }, 2000);
-
-  // Show results after first submit
-  const resultsSection = document.getElementById('results');
-  resultsSection.style.display = 'block';
 });
 
-// --- Utility: Calculate Average ---
-function average(arr) {
-  if (arr.length === 0) return 0;
-  return arr.reduce((a, b) => a + b) / arr.length;
-}
+/**
+ * Handle form reset events
+ * Uses requestAnimationFrame to ensure the reset happens after the form's native reset
+ * This prevents visual glitches and ensures proper state reset
+ */
+form.addEventListener("reset", function() {
+    // Use requestAnimationFrame to ensure this runs after the form reset
+    requestAnimationFrame(() => {
+        // Reset all sliders to default value
+        sliderPairs.forEach(({ slider, valueElement }) => {
+            if (!slider || !valueElement) return;
+            slider.value = '5';
+            updateSliderValue(slider, valueElement);
+        });
+    });
+});
 
-// --- Draw Bar Chart ---
+/**
+ * Handle form submissions
+ * Validates input, prevents duplicates, and manages the submission process
+ * Updates the UI with success/failure feedback and refreshes the visualization
+ */
+form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const studentId = formData.get("studentId");
+    const studentName = formData.get("studentName");
+    
+    if (!studentId || !studentName) {
+        alert('Please enter both your Student ID and Name');
+        return;
+    }
+
+    if (scoringManager.hasSubmitted(studentId)) {
+        alert('A submission has already been recorded for this Student ID');
+        return;
+    }
+
+    const scoreData = {
+        studentId: parseInt(studentId),
+        studentName: studentName,
+        clarity: parseInt(formData.get("Clarity")),
+        delivery: parseInt(formData.get("Delivery")),
+        confidence: parseInt(formData.get("Confidence")),
+        feedback: formData.get("feedback").trim(),
+        isAnonymous: formData.get("isAnonymous") === "on"
+    };
+
+    const result = scoringManager.submitScore(studentId, scoreData);
+    if (result.success) {
+        // Reset form and update UI
+        form.reset();
+        drawChart();
+        displayFeedbacks();
+        
+        // Show success message
+        const successMsg = document.getElementById('success-message');
+        successMsg.style.display = 'block';
+        
+        // Temporarily disable form
+        Array.from(form.elements).forEach(el => el.disabled = true);
+        
+        // Re-enable form after 2 seconds
+        setTimeout(() => {
+            successMsg.style.display = 'none';
+            Array.from(form.elements).forEach(el => el.disabled = false);
+        }, 2000);
+    } else {
+        alert(result.message);
+    }
+
+    // Show results section
+    const resultsSection = document.getElementById('results');
+    resultsSection.style.display = 'block';
+});
+
+/**
+ * Draws the bar chart visualization
+ * Uses HTML5 Canvas to create a responsive chart showing average scores
+ * Includes scale lines, gradients, and clear labeling for better readability
+ */
 function drawChart() {
-  const ctx = chartCanvas.getContext("2d");
-  ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+    const ctx = chartCanvas.getContext("2d");
+    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
 
-  const data = [
-    average(scores.Clarity),
-    average(scores.Delivery),
-    average(scores.Confidence)
-  ];
-  const labels = ["Clarity", "Delivery", "Confidence"];
-  const barColors = ["#3182ce", "#38a169", "#ed8936"];
-  const maxScore = 10;
-  const barWidth = 60;
-  const spacing = 20;
-  const chartHeight = chartCanvas.height;
-  const numBars = data.length;
-  const totalChartWidth = (numBars - 1) * spacing + numBars * barWidth;
-  const startX = (chartCanvas.width - totalChartWidth) / 2;
+    const summary = scoringManager.getSummary();
+    const data = [
+        summary.averages.clarity,
+        summary.averages.delivery,
+        summary.averages.confidence
+    ];
+    const labels = ["Clarity", "Delivery", "Confidence"];
+    const barColors = ["#3182ce", "#38a169", "#ed8936"];
+    const maxScore = 10;
+    const barWidth = 60;
+    const spacing = 20;
+    const chartHeight = chartCanvas.height - 40; // Leave room for labels
+    const numBars = data.length;
+    const totalChartWidth = (numBars - 1) * spacing + numBars * barWidth;
+    const startX = (chartCanvas.width - totalChartWidth) / 2;
 
-  data.forEach((score, index) => {
-    const color = barColors[index % barColors.length];
-    const height = (score / maxScore) * (chartHeight - 40);
-    const x = startX + index * (barWidth + spacing);
-    ctx.fillStyle = color;
-    ctx.fillRect(x, chartHeight - height - 20, barWidth, height);
-    ctx.fillStyle = "#222";
-    ctx.textAlign = "center";
-    ctx.font = "15px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText(score.toFixed(1), x + barWidth / 2, chartHeight - height - 30);
-    ctx.font = "13px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText(labels[index], x + barWidth / 2, chartHeight - 5);
-  });
+    // Draw scale lines and numbers
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= maxScore; i += 2) {
+        const y = chartCanvas.height - (i / maxScore * chartHeight) - 30;
+        ctx.beginPath();
+        ctx.moveTo(startX - 10, y);
+        ctx.lineTo(startX + totalChartWidth + 10, y);
+        ctx.stroke();
+        
+        ctx.fillStyle = "#718096";
+        ctx.font = "12px 'Segoe UI'";
+        ctx.textAlign = "right";
+        ctx.fillText(i.toString(), startX - 15, y + 4);
+    }
+
+    // Draw bars
+    data.forEach((score, index) => {
+        const x = startX + index * (barWidth + spacing);
+        const normalizedHeight = (score / maxScore) * chartHeight;
+        const y = chartCanvas.height - normalizedHeight - 30;
+
+        // Draw bar with gradient
+        const gradient = ctx.createLinearGradient(x, y, x, chartCanvas.height - 30);
+        gradient.addColorStop(0, barColors[index]);
+        gradient.addColorStop(1, barColors[index] + "88");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, barWidth, normalizedHeight);
+
+        // Draw score value
+        ctx.fillStyle = "#2d3748";
+        ctx.font = "bold 14px 'Segoe UI'";
+        ctx.textAlign = "center";
+        ctx.fillText(score.toFixed(1), x + barWidth / 2, y - 5);
+
+        // Draw label
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "12px 'Segoe UI'";
+        ctx.fillText(labels[index], x + barWidth / 2, chartCanvas.height - 10);
+    });
 }
 
-// --- Display Feedback ---
+/**
+ * Displays feedback cards
+ * Creates and updates the feedback section, handling anonymous submissions
+ * Ensures proper ordering and styling of feedback elements
+ */
 function displayFeedbacks() {
-  feedbackList.innerHTML = "<h3>Feedback</h3>";
-  feedbacks.forEach((fb) => {
-    const div = document.createElement("div");
-    div.className = "feedback-card";
-    div.innerHTML = `
-      <div class="feedback-text">${fb.text}</div>
-      <div class="feedback-meta">From: ${fb.studentName}</div>
-    `;
-    feedbackList.appendChild(div);
-  });
+    feedbackList.innerHTML = "<h3>Feedback</h3>";
+    const summary = scoringManager.getSummary();
+    summary.submissions.forEach(submission => {
+        if (submission.feedback) {
+            const feedbackCard = document.createElement('div');
+            feedbackCard.className = 'feedback-card';
+            
+            const feedbackText = document.createElement('div');
+            feedbackText.className = 'feedback-text';
+            feedbackText.textContent = submission.feedback;
+            
+            const feedbackMeta = document.createElement('div');
+            feedbackMeta.className = 'feedback-meta';
+            feedbackMeta.textContent = submission.isAnonymous ? 
+                'Anonymous feedback' : 
+                `Feedback from ${submission.studentName}`;
+            
+            feedbackCard.appendChild(feedbackText);
+            feedbackCard.appendChild(feedbackMeta);
+            feedbackList.appendChild(feedbackCard);
+        }
+    });
 }
 
-// --- Initialize ---
+// --- Initialize the Application ---
+// Draw the initial empty chart and hide the results section until first submission
 drawChart();
 displayFeedbacks();
 const resultsSection = document.getElementById('results');
