@@ -128,21 +128,8 @@ The application maintains the following data:
 
 ## Recommended MQTT Broker Setup
 
-1. Install Mosquitto or another MQTT broker
-2. Enable WebSocket support (default port 9001)
-3. Configure CORS if needed for web browser access
-4. Set up appropriate security measures for production use
-
-## Assets
-
-The project includes an `assets` directory containing:
-
-- **docs/**
-  - `Preliminary Design.png` - Visual representation of the initial system design
-  - `Project 1 User Requirements Document - Jackson Jacobson.pdf` - Detailed user requirements specification
-  - `Project 1 Tool Analysis - Jackson Jacobson.pdf` - Analysis of tools and technologies used in the project
-- **images/** - Directory containing project-related images
-
----
+1. Enable WebSocket support (default port 9001)
+2. Configure CORS if needed for web browser access
+3. Set up appropriate security measures for production use
 
 For any questions or issues, please contact Jackson Jacobson.

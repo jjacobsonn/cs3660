@@ -23,43 +23,28 @@ const confidenceValue = document.getElementById('confidence-value');
 const studentIdInput = document.getElementById('studentId');
 const studentNameInput = document.getElementById('studentName');
 
-/**
- * Updates the display value of a slider with a star emoji
- * This provides immediate visual feedback to users as they adjust scores
- * @param {HTMLInputElement} slider - The range input element
- * @param {HTMLElement} valueElement - The element to display the value
- */
-function updateSliderValue(slider, valueElement) {
-    if (!slider || !valueElement) return;
-    const currentValue = slider.value || '5';
-    valueElement.textContent = `${currentValue} ⭐`;
+// Function to update a slider's display value
+function updateSliderValue(event) {
+    const slider = event.target;
+    const valueDisplay = slider.parentElement.querySelector('.slider-value');
+    if (valueDisplay) {
+        valueDisplay.textContent = `${slider.value} ⭐`;
+    }
 }
 
-// Group slider elements with their corresponding value displays for easier management
-const sliderPairs = [
-    { slider: claritySlider, valueElement: clarityValue },
-    { slider: deliverySlider, valueElement: deliveryValue },
-    { slider: confidenceSlider, valueElement: confidenceValue }
-];
-
-/**
- * Initialize the application when the DOM is fully loaded
- * Sets up event listeners and initial values for all sliders
- */
+// Initialize slider functionality when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Validate DOM elements
-    sliderPairs.forEach(({ slider, valueElement }) => {
-        if (!slider || !valueElement) return;
-        
-        // Add both input and change event listeners
-        ['input', 'change'].forEach(eventType => {
-            slider.addEventListener(eventType, () => {
-                updateSliderValue(slider, valueElement);
-            });
-        });
-
+    // Set up all range inputs
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
         // Set initial value
-        updateSliderValue(slider, valueElement);
+        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        if (valueDisplay) {
+            valueDisplay.textContent = `${slider.value} ⭐`;
+        }
+        
+        // Add real-time update listeners
+        slider.addEventListener('input', updateSliderValue);
+        slider.addEventListener('change', updateSliderValue);
     });
 });
 
@@ -73,7 +58,8 @@ form.addEventListener("reset", function() {
     requestAnimationFrame(() => {
         // Reset all sliders to default value
         sliderPairs.forEach(({ slider, valueElement }) => {
-            if (slider) slider.value = '5';
+            if (!slider || !valueElement) return;
+            slider.value = '5';
             updateSliderValue(slider, valueElement);
         });
     });
