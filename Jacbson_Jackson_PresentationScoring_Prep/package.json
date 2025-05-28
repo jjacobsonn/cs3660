@@ -12,5 +12,6 @@
   "type": "commonjs",
   "dependencies": {
     "mqtt": "^5.13.0"
-  }
+  },
+  "devDependencies": {}
 }

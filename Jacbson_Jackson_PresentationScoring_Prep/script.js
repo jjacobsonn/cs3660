@@ -57,10 +57,12 @@ form.addEventListener("reset", function() {
     // Use requestAnimationFrame to ensure this runs after the form reset
     requestAnimationFrame(() => {
         // Reset all sliders to default value
-        sliderPairs.forEach(({ slider, valueElement }) => {
-            if (!slider || !valueElement) return;
-            slider.value = '5';
-            updateSliderValue(slider, valueElement);
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            const valueDisplay = slider.parentElement.querySelector('.slider-value');
+            if (valueDisplay) {
+                slider.value = '5';
+                valueDisplay.textContent = `${slider.value} ⭐`;
+            }
         });
     });
 });
@@ -96,32 +98,55 @@ form.addEventListener("submit", function (e) {
         isAnonymous: formData.get("isAnonymous") === "on"
     };
 
+    console.log('📝 Submitting score data:', scoreData);
+
     const result = scoringManager.submitScore(studentId, scoreData);
     if (result.success) {
+        console.log('✅ Score submitted successfully');
+        
         // Reset form and update UI
         form.reset();
+        
+        // Manually trigger reset of sliders after form reset
+        requestAnimationFrame(() => {
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                const valueDisplay = slider.parentElement.querySelector('.slider-value');
+                if (valueDisplay) {
+                    slider.value = '5';
+                    valueDisplay.textContent = `${slider.value} ⭐`;
+                }
+            });
+        });
+        
         drawChart();
         displayFeedbacks();
         
         // Show success message
         const successMsg = document.getElementById('success-message');
-        successMsg.style.display = 'block';
+        if (successMsg) {
+            successMsg.style.display = 'block';
+        }
         
         // Temporarily disable form
         Array.from(form.elements).forEach(el => el.disabled = true);
         
         // Re-enable form after 2 seconds
         setTimeout(() => {
-            successMsg.style.display = 'none';
+            if (successMsg) {
+                successMsg.style.display = 'none';
+            }
             Array.from(form.elements).forEach(el => el.disabled = false);
         }, 2000);
     } else {
+        console.error('❌ Score submission failed:', result.message);
         alert(result.message);
     }
 
     // Show results section
     const resultsSection = document.getElementById('results');
-    resultsSection.style.display = 'block';
+    if (resultsSection) {
+        resultsSection.style.display = 'block';
+    }
 });
 
 /**
@@ -130,6 +155,11 @@ form.addEventListener("submit", function (e) {
  * Includes scale lines, gradients, and clear labeling for better readability
  */
 function drawChart() {
+    if (!chartCanvas) {
+        console.warn('Chart canvas not found');
+        return;
+    }
+    
     const ctx = chartCanvas.getContext("2d");
     ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
 
@@ -197,6 +227,11 @@ function drawChart() {
  * Ensures proper ordering and styling of feedback elements
  */
 function displayFeedbacks() {
+    if (!feedbackList) {
+        console.warn('Feedback list element not found');
+        return;
+    }
+    
     feedbackList.innerHTML = "<h3>Feedback</h3>";
     const summary = scoringManager.getSummary();
     summary.submissions.forEach(submission => {
@@ -226,4 +261,34 @@ function displayFeedbacks() {
 drawChart();
 displayFeedbacks();
 const resultsSection = document.getElementById('results');
-resultsSection.style.display = 'none';
+if (resultsSection) {
+    resultsSection.style.display = 'none';
+}
+
+// Add some debugging
+console.log('📋 Grading app script loaded successfully');
+console.log('🔗 Scoring manager initialized:', scoringManager ? 'OK' : 'FAILED');
+console.log('📊 Form element found:', form ? 'OK' : 'FAILED');
+console.log('📈 Chart canvas found:', chartCanvas ? 'OK' : 'FAILED');
+
+// Add a test function for debugging
+window.testScoreSubmission = function() {
+    console.log('🧪 Testing score submission...');
+    const testScore = {
+        studentId: Math.floor(Math.random() * 90000) + 10000,
+        studentName: 'Test User',
+        clarity: Math.floor(Math.random() * 10) + 1,
+        delivery: Math.floor(Math.random() * 10) + 1,
+        confidence: Math.floor(Math.random() * 10) + 1,
+        feedback: 'Test feedback',
+        isAnonymous: false
+    };
+    
+    const result = scoringManager.submitScore(testScore.studentId, testScore);
+    console.log('🧪 Test result:', result);
+    
+    if (result.success) {
+        drawChart();
+        displayFeedbacks();
+    }
+};
