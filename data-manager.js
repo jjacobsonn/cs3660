@@ -3,7 +3,7 @@
  * 
  * Handles direct MQTT peer-to-peer communication for the presentation scoring application.
  * Now includes support for team reset signals from the presentation tool.
- * UPDATED: Added broadcast fallback for peer discovery issues.
+ * UPDATED: Added broadcast fallback for peer discovery issues and individual score broadcasting.
  */
 class ScoringManager {
     /**
@@ -262,7 +262,7 @@ class ScoringManager {
         this.summaryData.submissions.push(submission);
         this.updateSummary();
 
-        // 🔧 FIXED: Enhanced score broadcasting with fallback
+        // 🔧 FIXED: Enhanced score broadcasting with individual score broadcast
         console.log(`🔍 Attempting to send score. Discovered peers: ${this.peers.size}`);
         console.log(`🔍 Peer IDs:`, Array.from(this.peers));
         
@@ -270,13 +270,13 @@ class ScoringManager {
             // Send to discovered peers (normal peer-to-peer mode)
             this.peers.forEach(peerId => {
                 this.client.publish('scores/' + peerId, JSON.stringify(submission));
-                console.log(`📤 Sent score to peer: ${peerId}`);
+                console.log(`📤 Sent individual score to peer: ${peerId}`);
             });
         } else {
             // 🔧 FALLBACK: No peers discovered - use broadcast mode
             console.log('🔧 No peers found, using broadcast mode');
             
-            // Broadcast to multiple topics that presentation tools listen to
+            // 🔧 CRITICAL FIX: Broadcast INDIVIDUAL SCORE (not just summary)
             const broadcastTopics = [
                 'scores/broadcast',
                 'presentation/scores/broadcast',
@@ -285,7 +285,7 @@ class ScoringManager {
             
             broadcastTopics.forEach(topic => {
                 this.client.publish(topic, JSON.stringify(submission));
-                console.log(`📡 Broadcast score to: ${topic}`);
+                console.log(`📡 Broadcast individual score to: ${topic}`);
             });
             
             // Try to rediscover peers after broadcasting
