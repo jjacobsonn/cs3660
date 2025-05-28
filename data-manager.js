@@ -3,6 +3,7 @@
  * 
  * Handles direct MQTT peer-to-peer communication for the presentation scoring application.
  * Now includes support for team reset signals from the presentation tool.
+ * UPDATED: Added broadcast fallback for peer discovery issues.
  */
 class ScoringManager {
     /**
@@ -44,8 +45,14 @@ class ScoringManager {
             this.client.subscribe('scores/' + this.peerId);
             this.client.subscribe('summary/' + this.peerId);
             this.client.subscribe('presence');
+            this.client.subscribe('presence/broadcast'); // 🔧 Enhanced presence detection
+            this.client.subscribe('presence/force'); // 🔧 Enhanced presence detection
+            this.client.subscribe('system/presentation_tool'); // 🔧 Enhanced presence detection
             this.client.subscribe('team_reset'); // Subscribe to team reset signals
             this.broadcastPresence();
+            
+            // 🔧 NEW: Set up periodic presence announcements to help with discovery
+            this.startPeriodicPresence();
         });
 
         this.client.on('message', (topic, message) => {
@@ -56,7 +63,7 @@ class ScoringManager {
                     this.handleNewScore(data);
                 } else if (topic.startsWith('summary/')) {
                     this.handleSummaryUpdate(data);
-                } else if (topic === 'presence') {
+                } else if (topic === 'presence' || topic === 'presence/broadcast' || topic === 'presence/force' || topic === 'system/presentation_tool') {
                     this.handlePeerPresence(data);
                 } else if (topic === 'team_reset') {
                     // Handle team reset signals from presentation tool
@@ -69,6 +76,16 @@ class ScoringManager {
 
         // Connect to all peers in the network
         this.peers = new Set();
+    }
+
+    // 🔧 NEW: Periodic presence announcements to help with discovery
+    startPeriodicPresence() {
+        // Announce presence every 10 seconds for better discovery
+        setInterval(() => {
+            this.broadcastPresence();
+        }, 10000);
+        
+        console.log('🔧 Started periodic presence announcements every 10 seconds');
     }
 
     /**
@@ -147,21 +164,41 @@ class ScoringManager {
     }
 
     broadcastPresence() {
-        this.client.publish('presence', JSON.stringify({
+        const presenceData = {
             peerId: this.peerId,
-            timestamp: new Date().toISOString()
-        }));
+            timestamp: new Date().toISOString(),
+            type: 'grading_app' // 🔧 Identify as grading app
+        };
+        
+        // 🔧 ENHANCED: Broadcast to multiple presence topics for better discovery
+        const presenceTopics = [
+            'presence',
+            'presence/broadcast',
+            'presence/force'
+        ];
+        
+        presenceTopics.forEach(topic => {
+            this.client.publish(topic, JSON.stringify(presenceData));
+        });
+        
+        console.log('🔧 Enhanced presence broadcast to multiple channels');
     }
 
     handlePeerPresence(data) {
         if (data.peerId !== this.peerId) {
+            console.log('👋 Detected peer:', data.peerId, 'Type:', data.type);
+            
             this.peers.add(data.peerId);
+            console.log(`✅ Added peer. Total peers: ${this.peers.size}`);
+            
             // Share our current state with the new peer
             this.client.publish('scores/' + data.peerId, JSON.stringify({
                 type: 'state_sync',
                 scores: Array.from(this.submittedScores.entries()),
                 source: this.peerId
             }));
+            
+            console.log(`📤 Sent state sync to peer: ${data.peerId}`);
         }
     }
 
@@ -194,7 +231,7 @@ class ScoringManager {
     }
 
     /**
-     * Processes a new score submission
+     * Processes a new score submission with broadcast fallback
      * Validates input, updates storage, and broadcasts via MQTT
      * @param {string|number} studentId - The student's ID
      * @param {Object} scoreData - The submission data
@@ -225,10 +262,36 @@ class ScoringManager {
         this.summaryData.submissions.push(submission);
         this.updateSummary();
 
-        // Broadcast to all peers
-        this.peers.forEach(peerId => {
-            this.client.publish('scores/' + peerId, JSON.stringify(submission));
-        });
+        // 🔧 FIXED: Enhanced score broadcasting with fallback
+        console.log(`🔍 Attempting to send score. Discovered peers: ${this.peers.size}`);
+        console.log(`🔍 Peer IDs:`, Array.from(this.peers));
+        
+        if (this.peers.size > 0) {
+            // Send to discovered peers (normal peer-to-peer mode)
+            this.peers.forEach(peerId => {
+                this.client.publish('scores/' + peerId, JSON.stringify(submission));
+                console.log(`📤 Sent score to peer: ${peerId}`);
+            });
+        } else {
+            // 🔧 FALLBACK: No peers discovered - use broadcast mode
+            console.log('🔧 No peers found, using broadcast mode');
+            
+            // Broadcast to multiple topics that presentation tools listen to
+            const broadcastTopics = [
+                'scores/broadcast',
+                'presentation/scores/broadcast',
+                'scores/all'
+            ];
+            
+            broadcastTopics.forEach(topic => {
+                this.client.publish(topic, JSON.stringify(submission));
+                console.log(`📡 Broadcast score to: ${topic}`);
+            });
+            
+            // Try to rediscover peers after broadcasting
+            console.log('🔧 Attempting peer rediscovery...');
+            this.broadcastPresence();
+        }
 
         return {
             success: true,
@@ -260,17 +323,25 @@ class ScoringManager {
             confidence: totals.confidence / count
         };
 
-        // Broadcast summary to all peers
+        // Broadcast summary to all peers (with fallback)
         this.broadcastSummaryUpdate();
     }
 
     /**
-     * Broadcast summary update to all connected peers
+     * Broadcast summary update to all connected peers with fallback
      */
     broadcastSummaryUpdate() {
-        this.peers.forEach(peerId => {
-            this.client.publish('summary/' + peerId, JSON.stringify(this.summaryData));
-        });
+        if (this.peers.size > 0) {
+            // Send to discovered peers
+            this.peers.forEach(peerId => {
+                this.client.publish('summary/' + peerId, JSON.stringify(this.summaryData));
+            });
+            console.log(`📤 Sent summary to ${this.peers.size} peers`);
+        } else {
+            // 🔧 FALLBACK: Broadcast summary when no peers
+            this.client.publish('summary/broadcast', JSON.stringify(this.summaryData));
+            console.log('📡 Broadcast summary (no peers found)');
+        }
     }
 
     /**
@@ -327,6 +398,7 @@ class ScoringManager {
             peerId: this.peerId,
             totalSubmissions: this.summaryData.submittedCount,
             connectedPeers: this.peers.size,
+            peerIds: Array.from(this.peers), // 🔧 Added for debugging
             lastUpdate: new Date().toISOString()
         };
     }
